@@ -1,7 +1,8 @@
 %\documentclass{ExcelAtFIT}
 %\documentclass[czech]{ExcelAtFIT} % when writing in CZECH
 \documentclass[slovak]{ExcelAtFIT} % when writing in SLOVAK
-\usepackage[binary-units=true]{siunitx}
+\usepackage[binary-units=true,range-units=single]{siunitx}
+\sisetup{range-phrase=--}
 
 %--------------------------------------------------------
 %--------------------------------------------------------
@@ -10,7 +11,7 @@
 
 %   LEAVE this line commented out for the REVIEW VERSIONS
 %   UNCOMMENT this line to get the FINAL VERSION
-%\ExcelFinalCopy
+\ExcelFinalCopy
 
 
 %--------------------------------------------------------
@@ -57,7 +58,7 @@ V~tomto článku je predstavený spôsob, pomocou ktorého je možné vyhľadáv
 % How is the problem solved, the aim achieved (methodology)?
 Metóda prezentovaná v~tomto článku využíva kombináciu topologických indexov, tzv. molekulárnych odtlačkov, a rýchleho algoritmu pre hľadanie izomorfného podgrafu.
 % What are the specific results? How well is the problem solved?
-Práca porovnáva niekoľko algoritmov, ako aj spôsobov uloženia molekúl v~systéme. Najlepším riešením sa ukázalo byť použitie algoritmu zvaného RI v~kombinácii s~uložením serializovaných dát do databázy MongoDB. Riešenie umožňuje užívateľom vyhľadávať v~databázach v~reálnom čase, do niekoľkých sekúnd, v~čom sa dá porovnať s~inými existujúcimi systémami ako je napríklad PubChem.
+Práca porovnáva niekoľko algoritmov, ako aj spôsobov uloženia molekúl v~systéme. Najlepším riešením sa ukázalo byť použitie algoritmu zvaného RI v~kombinácii s~uložením serializovaných dát do databázy MongoDB. Riešenie umožňuje užívateľom vyhľadávať v~databázach v~reálnom čase, do niekoľkých sekúnd.
 % So what? How useful is this to Science and to the reader?
 Cieľom tohto článku je oboznámiť čitateľa s~problematikou vyhľadávania v~chemických databázach a ako je možné vytvoriť takýto systém pre vyhľadávanie s~ohľadom na súčasný výskum. Výsledky a myšlienky práce by mohli byť využité v~príbuzných oblastiach vyžadujúcich vyhľadávanie vzorov v~databázach, ako je napríklad počítačové videnie.
 }
@@ -99,7 +100,7 @@ Vyhľadanie vzoru v~chemickej štruktúre je náročná operácia a problém tie
 %\textbf{[Existujúce riešenia]} %Discuss existing solutions, be fair in identifying their strengths and weaknesses. Cite important works from the field of your topic. Try to define well what is the \textit{state of the art}. You can include a Section 2 titled ``Background'' or ``Previous Works'' and have the details there and make this paragraph short. Or, you can enlarge this paragraph to a whole page. In many scientific papers, \emph{this} is the most valuable part if it is written properly.
 Existuje niekoľko online chemických databáz, kto\-ré podporujú podštruktúrne vyhľadávanie. Medzi jednu z~najväčších patrí databáza PubChem\footnote{\url{https://pubchem.ncbi.nlm.nih.gov/}}. Jedná sa o~uzavreté systémy, ktoré poskytujú požadovanú funkcionalitu, ale sú naviazané na konkrétnu databázu a ich implementácia nie je verejne dostupná. Hlavnou ne\-vý\-ho\-dou sú obmedzenia na využívanie týchto databáz. Napríklad spomínaná databáza PubChem má obmedzenie na svoje REST API na maximálne päť požiadavkov za sekundu, 400 za minútu, a spoločný výpočetný čas operácií nesmie presiahnuť 300 sekúnd za minútu, čo môže nastať pri paralelnom behu po\-žia\-dav\-kov \cite{pubchem_limits}. 
 
-Okrem online sú dôležité aj offline databázy, ktoré sú zdieľané napríklad vo forme súboru. K~týmto databázam neexistuje odpovedajúci vyhľadávací nástroj. Riešením môže byť použitie jednej z~chemoinformatických knižníc, pomocou ktorých je možné takýto nástroj vytvoriť. Populárna knižnica, od ktorej mnohé ďalšie preberajú koncepty alebo implementáciu, je knižnica RDKit\footnote{\url{http://www.rdkit.org/}}. Zatiaľ čo vytvorenie takéhoto ná\-stro\-ja pre osobné použitie je vďaka knižnici pomerne jednoduché, problém nastáva, ak je potrebné systém pri\-spô\-so\-biť pre konkrétne potreby alebo výrazne škálovať. Napriek tomu predstavuje RDKit vhodnú východiskovú pozíciu. Okrem samotného podštruktúrneho vy\-hľa\-dá\-va\-nia, ktoré je založené na algoritme VF2, poskytuje knižnica taktiež zásuvný modul pre PostgreSQL databázu, ktorá slúži pre uloženie štruktúrnych dát a ďalších informácií o~látkach. Tento modul sprístupňuje vyhľadávanie na vysokej abstraktnej úrovni pomocou SQL dotazov a samotné vyhľadanie potom prebieha priamo v~procese databázového servera. To ale taktiež znamená, že pri veľkom počte dotazov hrozí preťaženie tohto jedného servera.
+Okrem online sú dôležité aj offline databázy, ktoré sú zdieľané napríklad vo forme súboru. Jedná sa pre\-va\-žne o~súkromné databázy uložené zväčša vo~formáte SDF. K~týmto databázam neexistuje odpovedajúci vy\-hľa\-dá\-va\-cí nástroj. Riešením môže byť použitie jednej z~chemoinformatických knižníc, pomocou ktorých je možné takýto nástroj vytvoriť. Populárna knižnica, od ktorej mnohé ďalšie preberajú koncepty alebo implementáciu, je knižnica RDKit\footnote{\url{http://www.rdkit.org/}}. Zatiaľ čo vytvorenie takéhoto ná\-stro\-ja pre osobné použitie je vďaka knižnici pomerne jednoduché, problém nastáva, ak je potrebné systém pri\-spô\-so\-biť pre konkrétne potreby alebo výrazne šká\-lo\-vať. Napriek tomu predstavuje RDKit vhodnú východiskovú pozíciu. Okrem samotného podštruktúrneho vy\-hľa\-dá\-va\-nia, ktoré je založené na algoritme VF2, poskytuje knižnica taktiež zásuvný modul pre PostgreSQL databázu, ktorá slúži pre uloženie štruktúrnych dát a ďalších informácií o~látkach. Tento modul sprístupňuje vy\-hľa\-dá\-va\-nie na vysokej abstraktnej úrovni pomocou SQL dotazov a samotné vyhľadanie potom prebieha priamo v~procese databázového servera. To ale taktiež znamená, že pri veľkom počte dotazov hrozí preťaženie tohto jedného servera.
 
 %\textbf{[Naše riešenie]}  %Make a quick outline of your approach -- pitch your solution.  The solution will be described in detail later, but give the reader a very quick overview now.
 V~tomto článku je predstavené modulárne riešenie, v~ktorom je každá časť systému zodpovedná za špe\-ci\-fi\-ckú úlohu, čo dáva možnosť jednoduchšie škálovať podľa konkrétnej potreby. Tento prístup tiež umožňuje systém oveľa lepšie optimalizovať a zvoliť nástroje, ktoré sú pre daný problém najvhodnejšie. Samotné vyhľadávanie používa rovnaký topologický index ako knižnica RDKit. Pre nájdenie izomorfného podgrafu je však použitý algoritmus RI, ktorý je v~porovnaní s~algoritmom VF2 schopný nájsť riešenie až v~trojnásobne kratšom čase. 
@@ -227,7 +228,7 @@ Po pridaní informácií o~väzbách bolo možné formát MPM porovnať s~formá
 
 \begin{table}[h]
 	\vskip6pt
-	\caption{Porovnanie formátov MPM a SDF.}
+	\caption{Porovnanie formátov MPM a SDF. Formáty, u ktorých nebol meraný čas deserializácie, sú uvedené iba pre porovnanie veľkosti, ich použitie by vzhľadom na existenciu lepšej varianty nedávalo zmysel.}
 	\centering
 	\begin{tabular}{l|r|r}
 		\toprule
@@ -236,7 +237,7 @@ Po pridaní informácií o~väzbách bolo možné formát MPM porovnať s~formá
 		SDF & $4431.555$ & Nemerané \\
 		SDF (DEFLATE) & $636.61$ & $259.283$ \\
 		MPM (\texttt{double}) & $614.941$ & Nemerané \\
-		MPM (\texttt{int}) & $465$ & $88.26$ \\
+		MPM (\texttt{int}) & $465$ & $64.91$ \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:sdfvsmpm}
@@ -286,6 +287,8 @@ Po pridaní informácií o~väzbách bolo možné formát MPM porovnať s~formá
 Po určení vhodnej veľkosti zložiek bolo možné vytvoriť úložisko v~súborovom systéme a porovnať ho s~databázou MongoDB. V~súborovom systéme na SSD disku bola vytvorená dvoj-úrovňová stromová štruktúra, kde každá zložka obsahovala najviac $1000$ súborov. Každá chemická štruktúra bola uložená ako jeden súbor, ktorého obsah sa čítal v~prostredí .Net pomocou funkcie \texttt{File.ReadAllBytes}. V~databáze MongoDB uloženej taktiež na SSD disku bola vytvorená nová kolekcia záznamov, ku ktorej sa pristupovalo pomocou oficiálneho MongoDB ovládača pre .Net. K~získaniu požadovaných záznamov bola použitá funkcia \texttt{collection.Find}, ktorej bol ako parameter predaný filter so zoznamom identifikátorov požadovaný záznamov. Keďže tento spôsob narozdiel od súborového úložiska umožňuje získať viacero záznamov jedným príkazom, boli zmerané časy pre rôzny počet súbežne získaných záznamov. Do oboch dátových úložisiek bolo uložených milión chemických štruktúr s~priemernou veľkosťou \SI{524}{\byte} v~serializovanej reprezentácii. Následne sa merala doba získania serializovaných dát pre $10000$ náhodných chemických štruktúr, každé meranie bolo desaťkrát zopakované a výsledky spriemerované. V~tabuľke \ref{tab:storage_benchmark} je možné nájsť výslednú priemernú dobu načítania dát jednej chemickej štruktúry pre uvedené metódy.
 
 Ako je možné vidieť vo výsledkoch, získanie dát pre jeden záznam v~databáze približne odpovedá zí\-ska\-niu dát zo súboru, avšak pri vyžiadaní viacerých záznamov z~databáze zároveň je databázové riešenie rádovo rý\-chlej\-šie. Zrýchlenie je najvýraznejšie medzi získaním jenoho a desiatich záznamov. S~ďalej sa zvyšujúcim počtom je postupne toto zrýchlenie menej výrazné, zatiaľ čo rastú pamäťové nároky na uloženie dát. Ako optimálna sa preto javí hodnota medzi $100$ až $1000$ súbežne získanými záznamami.
+
+Po sčítaní doby získania štruktúrnych dát z databázy, ich deserializácie a priemernej doby behu algoritmu RI zistíme, že doba spracovania jedného kandidáta sa~pohybuje okolo \SI{91}{\micro\second}. Ceľková doba vy\-hľa\-dá\-va\-nia potom závisí od~počtu kandidátov, ktorých je nutné skontrolovať. V~prípade použitia odtlačku s~vysokou presnosťou bude ich počet závisieť predovšetkým od~veľ\-ko\-sti databáze a vstupného vzoru. V prípade zadania vzoru, ktorý je reálne možné nájsť ako podštruktúru v \SI{30}{\percent} databázových záznamov bude vyhľadávanie z~prin\-cí\-pu trvať veľmi dlhú dobu. Takéto obecné vzory ale ne\-bý\-va\-jú pre užívateľov príliš za\-u\-jí\-ma\-vé. Navyše aj v~prípade množiny najčastejších vzorov, spomenutej začiatkom tejto časti, bol v~\SI{80}{\percent} prípadov počet kandidátov menší ako \SI{1}{\percent} veľkosti databáze. Ak uvážime databázu s~10 miliónmi záznamov, \SI{1}{\percent} by predstavovalo sto tisíc kandidátov. Pre takúto kandidátnu mno\-ži\-nu by doba spracovania bola \SI{9.1}{\second} a tento čas by bolo možné ďalej skrátiť paralelným spracovaním vo~viacerých vláknach. Experimenty na~takto veľkých kandidátnych množinách potvrdili predpovedanú dobu vyhľadávania. 
 
 %--------------------------------------------------------
 %--------------------------------------------------------
